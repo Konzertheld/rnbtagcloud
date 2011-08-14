@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<pluggable type="plugin">
+	<name>RN Block Tag Cloud</name>
+	<license url="http://www.apache.org/licenses/LICENSE-2.0.html">Apache Software License 2.0</license>
+	<author url="http://blog.tinyau.net/">Raman Ng (a.k.a. tinyau)</author>
+	<author url="http://konzertheld.de/">Konzertheld</author>
+	<version>1.7-block</version>
+	<url>http://blog.tinyau.net/archives/2007/08/30/habari-rn-tag-cloud-plugin</url>
+	<description><![CDATA[Render the tags into tag cloud. Updated version with block support.]]></description>
+	<copyright>2008</copyright>
+</pluggable>
