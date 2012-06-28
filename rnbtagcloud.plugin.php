@@ -53,7 +53,7 @@ class TagCloud extends Plugin
 	/**
 	 * Make the block available
 	 **/
-	public function filter_block_list( $block_list )
+	public function filter_block_list( $blocklist )
 	{
 		$blocklist[ 'rnbtagcloud' ] = _t( 'RN Block Tag Cloud' );
 		return $blocklist;
