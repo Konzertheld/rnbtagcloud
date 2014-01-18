@@ -342,6 +342,24 @@ class TagCloud extends Plugin
 		return ( !empty( $result ) ? $result->cnt : 0 );
 	}
 
+	private function get_tag_style_str($tag)
+	{
+		$style_str = '';
+		if ( 'y' == strtolower( $this->config['tag_by_size'] ) ) {
+			$style_str = 'style="font-size: ' . self::get_font_size_for_weight( $tag->relative_weight ) . ';';
+		}
+		if ( 'y' == strtolower( $this->config['tag_by_color'] ) ) {
+			if ( '' == $style_str ) {
+				$style_str = 'style="color: ' . self::get_color_for_weight( $tag->relative_weight ) . ';';
+			}
+			else {
+				$style_str .= ' color: ' . self::get_color_for_weight( $tag->relative_weight ) . ';';
+			}
+		}
+		$style_str .= ( '' == $style_str ? '' : '"' );
+		return $style_str;
+	}
+	
 	private function build_tag_cloud( $num_tag )
 	{
 		$tag_cloud = '';
@@ -379,19 +397,7 @@ class TagCloud extends Plugin
 		$tag_cloud .= "<ul class=\"tag-cloud\">\n";
 		if ( $results ) {
 			foreach ( $results as $tag ) {
-				$style_str = '';
-				if ( 'y' == strtolower( $this->config['tag_by_size'] ) ) {
-					$style_str = 'style="font-size: ' . self::get_font_size_for_weight( $tag->relative_weight ) . ';';
-				}
-				if ( 'y' == strtolower( $this->config['tag_by_color'] ) ) {
-					if ( '' == $style_str ) {
-						$style_str = 'style="color: ' . self::get_color_for_weight( $tag->relative_weight ) . ';';
-					}
-					else {
-						$style_str .= ' color: ' . self::get_color_for_weight( $tag->relative_weight ) . ';';
-					}
-				}
-				$style_str .= ( '' == $style_str ? '' : '"' );
+				$style_str = self::get_tag_style_str($tag);
 
 				$tag_cloud .= '<li><a ' . $style_str . ' href="' . URL::get( 'display_entries_by_tag', array ( 'tag' => $tag->tag_slug ), false ) . '" rel="tag" title="' . $tag->tag_text . " ({$tag->cnt})" . '">'. $tag->tag_text . '</a></li>';
 				$tag_cloud .= "\n";
