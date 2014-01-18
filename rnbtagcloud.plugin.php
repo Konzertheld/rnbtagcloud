@@ -365,15 +365,15 @@ class TagCloud extends Plugin
 		$tag_cloud = '';
 		$post_status = Post::status( 'published' );
 
-		if ( empty( $num_tag ) ) {
-			$limit = ( empty( $this->config['num_tag'] ) ? '' : "LIMIT {$this->config['num_tag']}" );
-		}
-		else {
-			$limit = "LIMIT {$num_tag}";
-		}
 		$hide_tags = self::get_hide_tag_list();
 		$total_tag_cnt = self::get_total_tag_usage_count();
 		$most_popular_tag_cnt = self::get_most_popular_tag_count();
+		if( empty( $num_tag ) ) {
+			$num_tag = $this->config['num_tag'];
+		}
+		if ( !empty( $num_tag ) ) {
+			$limit = "LIMIT {$num_tag}";
+		}
 
 		// Get tag and usage count descending
 		$sql = "
