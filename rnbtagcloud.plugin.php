@@ -360,53 +360,107 @@ class TagCloud extends Plugin
 		return $style_str;
 	}
 	
-	private function build_tag_cloud( $num_tag )
+	private function build_tag_cloud( $num_tag = null, $method = "median" )
 	{
-		$tag_cloud = '';
 		$post_status = Post::status( 'published' );
 
 		$hide_tags = self::get_hide_tag_list();
-		$total_tag_cnt = self::get_total_tag_usage_count();
-		$most_popular_tag_cnt = self::get_most_popular_tag_count();
 		if( empty( $num_tag ) ) {
 			$num_tag = $this->config['num_tag'];
 		}
-		if ( !empty( $num_tag ) ) {
-			$limit = "LIMIT {$num_tag}";
+		$total_tag_cnt = self::get_total_tag_usage_count();
+		$most_popular_tag_cnt = self::get_most_popular_tag_count();
+		
+		if($method == "weighted") {
+			if ( !empty( $num_tag ) ) {
+				$limit = "LIMIT {$num_tag}";
+			}
+		
+			// Get tag and usage count descending
+			$sql = "
+				SELECT t.term_display AS tag_text, t.term AS tag_slug, t.id AS id,
+					COUNT(ot.object_id) AS cnt,
+					COUNT(ot.object_id) * 100 / {$total_tag_cnt} AS weight,
+					COUNT(ot.object_id) * 100 / {$most_popular_tag_cnt} AS relative_weight
+				FROM {posts} p
+				INNER JOIN {object_terms} ot
+				ON p.id = ot.object_id
+				INNER JOIN {terms} t
+				ON ot.term_id = t.id
+				WHERE p.status = {$post_status}
+				{$hide_tags}
+				GROUP BY t.term_display, t.term, t.id
+				ORDER BY weight DESC
+				{$limit}";
+			$results = DB::get_results( $sql );
+			
+			if ( $results ) {
+				sort( $results );
+				foreach ( $results as $tag ) {
+					$style_str = self::get_tag_style_str($tag);
+					$tags[] .= '<li><a ' . $style_str . ' href="' . URL::get( 'display_entries_by_tag', array ( 'tag' => $tag->tag_slug ), false ) . '" rel="tag" title="' . $tag->tag_text . " ({$tag->cnt})" . '">'. $tag->tag_text . '</a></li>';
+				}
+			}
 		}
-
-		// Get tag and usage count descending
-		$sql = "
-			SELECT t.term_display AS tag_text, t.term AS tag_slug, t.id AS id,
-				COUNT(ot.object_id) AS cnt,
-				COUNT(ot.object_id) * 100 / {$total_tag_cnt} AS weight,
-				COUNT(ot.object_id) * 100 / {$most_popular_tag_cnt} AS relative_weight
-			FROM {posts} p
-			INNER JOIN {object_terms} ot
-			ON p.id = ot.object_id
-			INNER JOIN {terms} t
-			ON ot.term_id = t.id
-			WHERE p.status = {$post_status}
-			{$hide_tags}
-			GROUP BY t.term_display, t.term, t.id
-			ORDER BY weight DESC
-			{$limit}";
-		$results = DB::get_results( $sql );
-
-		sort( $results );
-		$tag_cloud .= "<ul class=\"tag-cloud\">\n";
-		if ( $results ) {
-			foreach ( $results as $tag ) {
-				$style_str = self::get_tag_style_str($tag);
-
-				$tag_cloud .= '<li><a ' . $style_str . ' href="' . URL::get( 'display_entries_by_tag', array ( 'tag' => $tag->tag_slug ), false ) . '" rel="tag" title="' . $tag->tag_text . " ({$tag->cnt})" . '">'. $tag->tag_text . '</a></li>';
-				$tag_cloud .= "\n";
+		elseif($method == "median") {
+			$sql = "
+				SELECT t.term_display AS tag_text, t.term AS tag_slug, t.id AS id,
+					COUNT(ot.object_id) AS cnt,
+					COUNT(ot.object_id) * 100 / {$total_tag_cnt} AS weight,
+					COUNT(ot.object_id) * 100 / {$most_popular_tag_cnt} AS relative_weight,
+					random() AS r
+				FROM {posts} p
+				INNER JOIN {object_terms} ot
+				ON p.id = ot.object_id
+				INNER JOIN {terms} t
+				ON ot.term_id = t.id
+				WHERE p.status = {$post_status}
+				{$hide_tags}
+				GROUP BY t.term_display, t.term, t.id
+				ORDER BY cnt DESC, r";
+			$results = DB::get_results( $sql );
+			if(!isset($num_tag) || empty($num_tag)) {
+				$num_tag = count($results);
+			}
+			
+			if( $results ) {
+				$quarter = floor(count($results) / 4);
+				$midspread = count($results) - 2 * $quarter;
+				for($i=0; $i<=$quarter; $i++) {
+					if($i > $num_tag) break;
+					$tag = $results[$i];
+					$tag->relative_weight = 100;
+					$style_str = self::get_tag_style_str($tag);
+					$tags[] .= '<li><a ' . $style_str . ' href="' . URL::get( 'display_entries_by_tag', array ( 'tag' => $tag->tag_slug ), false ) . '" rel="tag" title="' . $tag->tag_text . " ({$tag->cnt})" . '">'. $tag->tag_text . '</a></li>';
+				}
+				for($i=$quarter+1; $i<=$midspread; $i++) {
+					if($i > $num_tag) break;
+					$tag = $results[$i];
+					$tag->relative_weight = 50;
+					$style_str = self::get_tag_style_str($tag);
+					$tags[] .= '<li><a ' . $style_str . ' href="' . URL::get( 'display_entries_by_tag', array ( 'tag' => $tag->tag_slug ), false ) . '" rel="tag" title="' . $tag->tag_text . " ({$tag->cnt})" . '">'. $tag->tag_text . '</a></li>';
+				}
+				for($i=$midspread+1; $i<count($results); $i++) {
+					if($i > $num_tag) break;
+					$tag = $results[$i];
+					$tag->relative_weight = 0;
+					$style_str = self::get_tag_style_str($tag);
+					$tags[] .= '<li><a ' . $style_str . ' href="' . URL::get( 'display_entries_by_tag', array ( 'tag' => $tag->tag_slug ), false ) . '" rel="tag" title="' . $tag->tag_text . " ({$tag->cnt})" . '">'. $tag->tag_text . '</a></li>';
+				}
+				shuffle($tags);
 			}
 		}
 		else {
-			$tag_cloud .= "<li>" . _t(' No tag' ) . "</li>\n";
+			return "<p>" . _t("Invalid tag cloud algorithm specified", __CLASS__) . "</p>";
 		}
-		$tag_cloud .= "</ul>\n";
+		
+		if(isset($tags) && count($tags)) {
+			return "<ul class=\"tag-cloud\">\n" . implode("\n", $tags) . "</ul>\n";
+		}
+		else {
+			return "<p>" . _t("No tags found", __CLASS__) . "</p>";
+		}
+		
 
 		return $tag_cloud;
 	}
