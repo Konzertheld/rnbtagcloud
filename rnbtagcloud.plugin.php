@@ -3,11 +3,11 @@
 class TagCloud extends Plugin
 {
 	private $config = array();
-	private $class_name = '';
+	private $class_name = "";
 	private $cache = array();
 	private $default_options = array (
-		'num_tag' => '',
-		'hide_tags' => '',
+		'num_tag' => "",
+		'hide_tags' => "",
 		'tag_by_color' => 'Y',
 		'least_color' => '#444444',
 		'most_color' => '#cccccc',
@@ -110,7 +110,7 @@ class TagCloud extends Plugin
 					$hide_tags = $ui->append( 'textmulti', 'hide_tags', 'option:' . $this->class_name . '__hide_tags', _t( 'Tag(s) to be hidden' ) );
 
 					$tag_by_color = $ui->append( 'select', 'tag_by_color', 'option:' . $this->class_name . '__tag_by_color', _t( 'Popularity by Color?' ) );
-					$tag_by_color->options = array( '' => '', 'Y' => 'Yes', 'N' => 'No' );
+					$tag_by_color->options = array( "" => "", 'Y' => 'Yes', 'N' => 'No' );
 					$tag_by_color->add_validator( 'validate_tag_by_color' );
 
 					$least_color = $ui->append( 'text', 'least_color', 'option:' . $this->class_name . '__least_color', _t( 'Color of least popular tag (in hex value, e.g. #444444)' ) );
@@ -120,7 +120,7 @@ class TagCloud extends Plugin
 					$most_color->add_validator( 'validate_color_code' );
 
 					$tag_by_size = $ui->append( 'select', 'tag_by_size', 'option:' . $this->class_name . '__tag_by_size', _t( 'Popularity by Size?' ) );
-					$tag_by_size->options = array( '' => '', 'Y' => 'Yes', 'N' => 'No' );
+					$tag_by_size->options = array( "" => "", 'Y' => 'Yes', 'N' => 'No' );
 					$tag_by_size->add_validator( 'validate_tag_by_size' );
 
 					$least_size = $ui->append( 'text', 'least_size', 'option:' . $this->class_name . '__least_size', _t( 'Size of least popular tag' ) );
@@ -130,7 +130,7 @@ class TagCloud extends Plugin
 					$most_size->add_validator( 'validate_size' );
 
 					$font_unit = $ui->append( 'select', 'font_unit', 'option:' . $this->class_name . '__font_unit', _t( 'Font Unit' ) );
-					$font_unit->options = array( '' => '', '%' => '%', 'em' => 'em', 'px' => 'px' );
+					$font_unit->options = array( "" => "", '%' => '%', 'em' => 'em', 'px' => 'px' );
 					$font_unit->add_validator( 'validate_size' );
 
 					$ui->append( 'submit', 'save', _t( 'Save' ) );
@@ -188,7 +188,7 @@ class TagCloud extends Plugin
 
 	public function filter_validate_tag_by_color( $valid, $value )
 	{
-		if ( empty( $value ) || $value == '' ) {
+		if ( empty( $value ) || $value == "" ) {
 			return array( _t( 'A value for this field is required.' ) );
 		}
 		$this->config['tag_by_color'] = $value;
@@ -210,7 +210,7 @@ class TagCloud extends Plugin
 
 	public function filter_validate_tag_by_size( $valid, $value )
 	{
-		if ( empty( $value ) || $value == '' ) {
+		if ( empty( $value ) || $value == "" ) {
 			return array( _t( 'A value for this field is required.' ) );
 		}
 		$this->config['tag_by_size'] = $value;
@@ -289,15 +289,15 @@ class TagCloud extends Plugin
 	private function get_hide_tag_list()
 	{
 		if ( !empty( $this->config['hide_tags' ] ) ) {
-			$hide_tag_list = '';
+			$hide_tag_list = "";
 			foreach ( $this->config['hide_tags'] as $tag ) {
-				$hide_tag_list .= ( $hide_tag_list == '' ? "'{$tag}'" : ", '{$tag}'" );
+				$hide_tag_list .= ( $hide_tag_list == "" ? "'{$tag}'" : ", '{$tag}'" );
 			}
 			$hide_tag_list = "AND t.term NOT IN ({$hide_tag_list})";
 			return $hide_tag_list;
 		}
 		else {
-			return '';
+			return "";
 		}
 	}
 
@@ -344,19 +344,19 @@ class TagCloud extends Plugin
 
 	private function get_tag_style_str($tag)
 	{
-		$style_str = '';
+		$style_str = "";
 		if ( 'y' == strtolower( $this->config['tag_by_size'] ) ) {
 			$style_str = 'style="font-size: ' . self::get_font_size_for_weight( $tag->relative_weight ) . ';';
 		}
 		if ( 'y' == strtolower( $this->config['tag_by_color'] ) ) {
-			if ( '' == $style_str ) {
+			if ( "" == $style_str ) {
 				$style_str = 'style="color: ' . self::get_color_for_weight( $tag->relative_weight ) . ';';
 			}
 			else {
 				$style_str .= ' color: ' . self::get_color_for_weight( $tag->relative_weight ) . ';';
 			}
 		}
-		$style_str .= ( '' == $style_str ? '' : '"' );
+		$style_str .= ( "" == $style_str ? "" : '"' );
 		return $style_str;
 	}
 	
